@@ -1,0 +1,19 @@
+{
+  "name": "aberrorlog",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "terser src/ab-guard.js --compress --mangle --output public/ab-guard.min.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.95.3"
+  },
+  "devDependencies": {
+    "terser": "^5.46.0"
+  }
+}

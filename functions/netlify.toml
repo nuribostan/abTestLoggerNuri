@@ -1,0 +1,3 @@
+[build]
+  command = "npm run build"  # Netlify önce kodu sıkıştıracak
+  publish = "public"         # Sadece sıkıştırılmış dosyayı yayınlayacak
