@@ -1,19 +1,12 @@
 {
-  "name": "aberrorlog",
+  "name": "ab-guard",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "AB Test Error Logger",
+  "main": "src/ab-guard.js",
   "scripts": {
-    "build": "terser src/ab-guard.js --compress --mangle --output public/ab-guard.min.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
-  "dependencies": {
-    "@supabase/supabase-js": "^2.95.3"
+    "build": "mkdir -p public && terser src/ab-guard.js --compress --mangle --output public/ab-guard.min.js"
   },
   "devDependencies": {
-    "terser": "^5.46.0"
+    "terser": "^5.37.0"
   }
 }
