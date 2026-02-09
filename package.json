@@ -8,5 +8,8 @@
   },
   "devDependencies": {
     "terser": "^5.37.0"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.95.3"
   }
 }
