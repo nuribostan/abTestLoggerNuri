@@ -5,15 +5,18 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 exports.handler = async (event, context) => {
-    // 1. CORS Başlıkları (Localhost'tan veya VWO'dan gelen isteklere izin ver)
+    // Gelen isteğin nereden geldiğini (Origin) alıyoruz
+    const origin = event.headers.origin || event.headers.Origin || '*';
+    
+    // Dinamik Headerlar: '*' yerine gelen adresi geri yolluyoruz
     const headers = {
-        'Access-Control-Allow-Origin': '*', 
+        'Access-Control-Allow-Origin': origin, 
         'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS'
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Credentials': 'true' // İşte sihirli değnek bu!
     };
 
-    // 2. Preflight (OPTIONS) İsteğini Karşıla
-    // Tarayıcı "Veri gönderebilir miyim?" diye sorar, buna "200 OK" demeliyiz.
+    // Preflight (OPTIONS) İsteği
     if (event.httpMethod === 'OPTIONS') {
         return {
             statusCode: 200,
@@ -22,7 +25,6 @@ exports.handler = async (event, context) => {
         };
     }
 
-    // Sadece POST isteğine izin ver
     if (event.httpMethod !== 'POST') {
         return { statusCode: 405, headers, body: 'Method Not Allowed' };
     }
@@ -35,7 +37,6 @@ exports.handler = async (event, context) => {
              return { statusCode: 400, headers, body: 'Invalid Payload' };
         }
 
-        // Veriyi hazırla
         const rowsToInsert = errors.map(err => ({
             test_id: err.test_id,
             variation: err.variation,
@@ -49,7 +50,6 @@ exports.handler = async (event, context) => {
             session_id: err.session_id,
         }));
 
-        // Supabase'e yaz
         const { data, error } = await supabase
             .from('error_logs')
             .insert(rowsToInsert);
