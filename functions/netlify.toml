@@ -1,5 +1,5 @@
 [build]
-  # Fonksiyonların nerede olduğunu belirtiyoruz (EN ÖNEMLİ KISIM BU)
+  # Fonksiyonların nerede olduğunu belirtiyoruz (EKSİK OLAN KISIM BUYDU)
   functions = "functions"
   
   # Siteyi derleme komutu
