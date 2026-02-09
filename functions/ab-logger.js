@@ -1,22 +1,25 @@
 const { createClient } = require('@supabase/supabase-js');
 
-// Ortam değişkenlerinden anahtarları alacağız (Netlify panelinden eklenecek)
 const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY; // DİKKAT: Service Role Key kullanılacak
-
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 exports.handler = async (event, context) => {
-    // 1. CORS Ayarları (Çok Önemli! Başka sitelerden istek geleceği için)
+    // 1. CORS Başlıkları (Localhost'tan gelen isteklere izin ver)
     const headers = {
-        'Access-Control-Allow-Origin': '*', // Güvenlik için ilerde sadece kendi domainlerini yazarsın
+        'Access-Control-Allow-Origin': '*', 
         'Access-Control-Allow-Headers': 'Content-Type',
         'Access-Control-Allow-Methods': 'POST, OPTIONS'
     };
 
-    // Preflight (OPTIONS) isteğini karşıla
+    // 2. Preflight (OPTIONS) İsteğini Karşıla
+    // Tarayıcı "Veri gönderebilir miyim?" diye sorar, buna "Evet" demeliyiz.
     if (event.httpMethod === 'OPTIONS') {
-        return { statusCode: 200, headers, body: '' };
+        return {
+            statusCode: 200,
+            headers,
+            body: ''
+        };
     }
 
     if (event.httpMethod !== 'POST') {
@@ -24,31 +27,26 @@ exports.handler = async (event, context) => {
     }
 
     try {
-        // 2. Gelen veriyi al
         const payload = JSON.parse(event.body);
-        const errors = payload.errors; // Kütüphanemiz { errors: [] } yolluyor
+        const errors = payload.errors;
 
         if (!errors || !Array.isArray(errors)) {
              return { statusCode: 400, headers, body: 'Invalid Payload' };
         }
 
-        // 3. Veriyi Supabase'e yazmak için hazırla
         const rowsToInsert = errors.map(err => ({
             test_id: err.test_id,
             variation: err.variation,
             test_version: err.test_version,
-            error_type: err.type, // JS kütüphanesindeki isimle eşleşmeli
+            error_type: err.type,
             severity: err.severity,
             message: err.message,
             stack_trace: err.stack_trace,
             meta: err.meta,
             context: err.context,
             session_id: err.session_id,
-            // timestamp JS'den geliyor ama biz DB'nin created_at'ini kullansak daha iyi,
-            // yine de log zamanını meta'ya ekleyebiliriz.
         }));
 
-        // 4. Supabase'e toplu insert
         const { data, error } = await supabase
             .from('error_logs')
             .insert(rowsToInsert);
@@ -66,7 +64,7 @@ exports.handler = async (event, context) => {
         return {
             statusCode: 500,
             headers,
-            body: JSON.stringify({ error: 'Internal Server Error' })
+            body: JSON.stringify({ error: 'Internal Server Error', details: error.message })
         };
     }
 };

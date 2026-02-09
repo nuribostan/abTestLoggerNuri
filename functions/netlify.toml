@@ -1,3 +1,15 @@
 [build]
-  command = "npm run build"  # Netlify önce kodu sıkıştıracak
-  publish = "public"         # Sadece sıkıştırılmış dosyayı yayınlayacak
+  # Fonksiyonların nerede olduğunu belirtiyoruz (EN ÖNEMLİ KISIM BU)
+  functions = "functions"
+  
+  # Siteyi derleme komutu
+  command = "npm run build"
+  
+  # Yayına alınacak klasör
+  publish = "public"
+
+[[headers]]
+  # Tüm dosyalar için CORS izni verelim (Garanti olsun)
+  for = "/*"
+    [headers.values]
+    Access-Control-Allow-Origin = "*"
