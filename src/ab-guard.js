@@ -186,6 +186,7 @@
       this.sentHashes.add(errorHash);
 
       const payload = {
+        brand: this.brand,
         test_id: this.testId,
         variation: this.variation,
         test_version: this.version,
@@ -295,23 +296,27 @@
    * Test kodunu bu fonksiyon içine yazıyoruz.
    * Otomatik try-catch bloğuna alır.
    */
-  window.runABTest = async function (config, callback) {
-    const { testId, variation, version = "1.0.0" } = config;
-    const guard = new ABGuard(testId, variation, version);
+/* ==================== GLOBAL API ==================== */
+    window.runABTest = async function(config, callback) {
+        // 'brand' parametresi eklendi, varsayılan 'genel'
+        const { brand = 'genel', testId, variation, version = '1.0.0' } = config;
+        
+        // Brand bilgisini sınıfın içine taşıyoruz
+        const guard = new ABGuard(testId, variation, version);
+        guard.brand = brand; // Yeni özellik
 
-    try {
-      await callback(guard);
-    } catch (e) {
-      // Callback içinde beklenmedik bir JS hatası olursa (Syntax, Reference vs)
-      guard.log(
-        "RUNTIME_EXCEPTION",
-        e.message || "Bilinmeyen Hata",
-        { original_stack: e.stack },
-        "critical",
-      );
-      console.error(e); // Developer görsün diye konsola da bas
-    }
-  };
+        try {
+            await callback(guard);
+        } catch (e) {
+            guard.log(
+                'RUNTIME_EXCEPTION',
+                e.message || 'Bilinmeyen Hata',
+                { original_stack: e.stack },
+                'critical'
+            );
+            console.error(e);
+        }
+    };
 
   // Config güncelleme metodu
   window.ABGuardConfig = (options) => Object.assign(CONFIG, options);

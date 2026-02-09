@@ -1,5 +1,4 @@
 const { createClient } = require('@supabase/supabase-js');
-// Hash oluşturmak için crypto kütüphanesini kullanacağız (Node.js'te gömülü gelir)
 const crypto = require('crypto');
 
 const supabaseUrl = process.env.SUPABASE_URL;
@@ -7,7 +6,7 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 exports.handler = async (event, context) => {
-    // --- CORS AYARLARI ---
+    // CORS
     const origin = event.headers.origin || event.headers.Origin || '*';
     const headers = {
         'Access-Control-Allow-Origin': origin, 
@@ -25,15 +24,14 @@ exports.handler = async (event, context) => {
 
         if (!errors || !Array.isArray(errors)) return { statusCode: 400, headers, body: 'Invalid Payload' };
 
-        // --- DEDUPLICATION MANTIĞI ---
         for (const err of errors) {
+            // Marka bilgisini al (Yoksa 'Genel' yap)
+            const brand = err.brand || 'Genel';
             
-            // 1. Benzersiz bir Parmak İzi (Hash) oluştur
-            // Test ID + Varyasyon + Hata Tipi + Hata Mesajı aynıysa bu "AYNI HATA"dır.
-            const uniqueString = `${err.test_id}|${err.variation}|${err.type}|${err.message}`;
+            // Hash'e markayı da ekle: Marka değişirse hata farklı sayılır
+            const uniqueString = `${brand}|${err.test_id}|${err.variation}|${err.type}|${err.message}`;
             const errorHash = crypto.createHash('md5').update(uniqueString).digest('hex');
 
-            // 2. Bu hash veritabanında var mı kontrol et?
             const { data: existingErr } = await supabase
                 .from('error_logs')
                 .select('id, occurrences')
@@ -41,21 +39,19 @@ exports.handler = async (event, context) => {
                 .single();
 
             if (existingErr) {
-                // A) VARSA: Sadece sayacı artır ve tarihi güncelle (Yeni satır ekleme!)
                 await supabase
                     .from('error_logs')
                     .update({ 
                         occurrences: existingErr.occurrences + 1,
                         last_seen_at: new Date().toISOString(),
-                        // Son kullanıcının cihaz bilgisini de güncelleyebiliriz
                         context: err.context 
                     })
                     .eq('id', existingErr.id);
             } else {
-                // B) YOKSA: Yeni kayıt oluştur
                 await supabase
                     .from('error_logs')
                     .insert({
+                        brand: brand, // <--- Veritabanına yaz
                         test_id: err.test_id,
                         variation: err.variation,
                         test_version: err.test_version,
@@ -66,14 +62,14 @@ exports.handler = async (event, context) => {
                         meta: err.meta,
                         context: err.context,
                         session_id: err.session_id,
-                        error_hash: errorHash,  // Hash'i de kaydet
-                        occurrences: 1,         // İlk kez görüldü
+                        error_hash: errorHash,
+                        occurrences: 1,
                         last_seen_at: new Date().toISOString()
                     });
             }
         }
 
-        return { statusCode: 200, headers, body: JSON.stringify({ message: 'Processed successfully' }) };
+        return { statusCode: 200, headers, body: JSON.stringify({ message: 'Processed' }) };
 
     } catch (error) {
         console.error('Function Error:', error);
