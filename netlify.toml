@@ -1,0 +1,15 @@
+[build]
+  # Fonksiyonların nerede olduğunu Netlify'a tanıtır
+  functions = "functions"
+  
+  # Derleme ayarları
+  command = "npm run build"
+  publish = "public"
+
+[[headers]]
+  # CORS ayarlarını tüm site için geçerli kılar
+  for = "/*"
+    [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Headers = "Content-Type"
+    Access-Control-Allow-Methods = "POST, OPTIONS"
