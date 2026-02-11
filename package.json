@@ -4,7 +4,7 @@
   "description": "AB Test Error Logger",
   "main": "src/ab-guard.js",
   "scripts": {
-    "build": "mkdir -p public && terser src/ab-guard.js --compress --mangle --output public/ab-guard.min.js"
+    "build": "echo 'Build skipped: Using manually obfuscated file'"
   },
   "devDependencies": {
     "terser": "^5.37.0"

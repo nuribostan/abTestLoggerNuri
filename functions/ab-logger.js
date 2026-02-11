@@ -6,7 +6,6 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 exports.handler = async (event, context) => {
-    // CORS
     const origin = event.headers.origin || event.headers.Origin || '*';
     const headers = {
         'Access-Control-Allow-Origin': origin, 
@@ -25,10 +24,9 @@ exports.handler = async (event, context) => {
         if (!errors || !Array.isArray(errors)) return { statusCode: 400, headers, body: 'Invalid Payload' };
 
         for (const err of errors) {
-            // Marka bilgisini al (Yoksa 'Genel' yap)
+
             const brand = err.brand || 'Genel';
             
-            // Hash'e markayı da ekle: Marka değişirse hata farklı sayılır
             const uniqueString = `${brand}|${err.test_id}|${err.variation}|${err.type}|${err.message}`;
             const errorHash = crypto.createHash('md5').update(uniqueString).digest('hex');
 
@@ -51,7 +49,7 @@ exports.handler = async (event, context) => {
                 await supabase
                     .from('error_logs')
                     .insert({
-                        brand: brand, // <--- Veritabanına yaz
+                        brand: brand, 
                         test_id: err.test_id,
                         variation: err.variation,
                         test_version: err.test_version,
